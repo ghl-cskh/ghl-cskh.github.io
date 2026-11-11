@@ -1,12 +1,13 @@
 {
- "updatedAt": "2026-11-11T14:05:10.707Z",
+ "updatedAt": "2026-11-11T15:03:29.630040Z",
  "branches": [
   {
    "id": "hpl-q7",
    "slug": "hpl-q7",
    "sys": "HPL",
    "name": "Q7",
-   "createdAt": "2026-11-11T14:05:10.707Z"
+   "createdAt": "2026-11-11T14:05:10.707Z",
+   "kho": "https://script.google.com/macros/s/AKfycbyf2mSnx9Eqv5pE7R0DXBPD2t3JZzYK7Jy5VRJgJs_jjitZ9trjNm3q2OSCL38YyQWZ/exec"
   },
   {
    "id": "acr-q4",
