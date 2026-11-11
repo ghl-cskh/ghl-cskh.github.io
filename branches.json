@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-11T15:50:20.918Z",
+ "updatedAt": "2026-11-11T15:51:21.717Z",
  "branches": [
   {
    "id": "hpl-q7",
@@ -15,6 +15,13 @@
    "sys": "ACR",
    "name": "Q4",
    "createdAt": "2026-11-11T14:05:10.707Z"
+  },
+  {
+   "id": "hpl-quan7",
+   "slug": "hpl-quan7",
+   "sys": "HPL",
+   "name": "Quận7",
+   "createdAt": "2026-11-11T15:51:21.717Z"
   }
  ]
 }
