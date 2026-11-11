@@ -1,4 +1,19 @@
 {
- "updatedAt": "",
- "branches": []
+ "updatedAt": "2026-11-11T14:05:10.707Z",
+ "branches": [
+  {
+   "id": "hpl-q7",
+   "slug": "hpl-q7",
+   "sys": "HPL",
+   "name": "Q7",
+   "createdAt": "2026-11-11T14:05:10.707Z"
+  },
+  {
+   "id": "acr-q4",
+   "slug": "acr-q4",
+   "sys": "ACR",
+   "name": "Q4",
+   "createdAt": "2026-11-11T14:05:10.707Z"
+  }
+ ]
 }
