@@ -1,0 +1,17 @@
+{
+ "name": "Sổ CSKH Ba Mẹ",
+ "short_name": "Sổ CSKH",
+ "start_url": "/",
+ "scope": "/",
+ "display": "standalone",
+ "background_color": "#fff7f6",
+ "theme_color": "#B5001B",
+ "icons": [
+  {
+   "src": "/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
