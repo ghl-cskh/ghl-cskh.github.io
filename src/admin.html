@@ -47,22 +47,10 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{text-align:left
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal .card{width:min(640px,100%);max-height:90vh;overflow:auto;margin:0}
 code.blk{display:block;white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:8px;max-height:140px;overflow:auto}
-/* v2.2 dễ dùng: chữ to, nút to */
-body{font-size:16.5px}
-main{padding:18px}
-.tabs button{padding:12px 18px;font-size:16px;min-height:48px}
-.btn{padding:12px 20px;font-size:16px;min-height:48px;font-weight:700}
-.btn.sm{padding:9px 16px;font-size:15px;min-height:44px}
-input,textarea{font-size:17px;padding:13px;min-height:50px;border-width:2px}
-.card h2{font-size:19px}
-.muted{font-size:15px;color:var(--ink);opacity:.8}
-table{font-size:15px}
-.br .nm{font-size:17px}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #f5a000;outline-offset:2px}
 </style>
 </head>
 <body>
-<header><h1>Quản trị Sổ CSKH<small id="who">Chưa đăng nhập</small></h1><button type="button" class="btn ghost sm" id="out" hidden style="color:#fff;border-color:rgba(255,255,255,.5)">🚪 Đăng xuất</button></header>
+<header><h1>Quản trị Sổ CSKH<small id="who">Chưa đăng nhập</small></h1><button type="button" class="btn ghost sm" id="out" hidden style="color:#fff;border-color:rgba(255,255,255,.5)">Đăng xuất</button></header>
 <main id="main"><div class="card login"><p>Đang mở…</p></div></main>
 <div id="toast" hidden></div>
 <script>
@@ -85,7 +73,7 @@ function tokEmail(t){ if(/^demo\|/.test(t)) return t.split("|")[1]; try{ const p
 async function onTok(t){ const em=tokEmail(t); if(!em){ toast("Đăng nhập không hợp lệ"); return; }
   if(await sha256(em)!==CFG.adminHash){ $("main").innerHTML=`<div class="card login"><h2>Không có quyền</h2><p class="muted">${esc(em)} không phải Gmail quản trị.</p><button class="btn" onclick="LS.del('adm_tok');location.reload()">Đăng nhập Gmail khác</button></div>`; return; }
   S.tok=t; S.email=em; LS.set("adm_tok",t); $("who").textContent=em; $("out").hidden=false; await loadBranches(); render(); }
-function loginView(){ $("main").innerHTML=`<div class="card login"><h2>Đăng nhập quản trị</h2><p class="muted">Bấm nút bên dưới rồi chọn Gmail quản trị. Gmail khác sẽ không vào được.</p><div id="gbtn" style="display:flex;justify-content:center;margin-top:12px"></div></div>`;
+function loginView(){ $("main").innerHTML=`<div class="card login"><h2>Đăng nhập quản trị</h2><p class="muted">Chỉ Gmail quản trị vào được trang này.</p><div id="gbtn" style="display:flex;justify-content:center;margin-top:12px"></div></div>`;
   if(window.__sdbMockLogin){ $("gbtn").innerHTML=`<button class="btn" id="mk">Đăng nhập bằng Google</button>`; $("mk").onclick=async()=>onTok(await window.__sdbMockLogin()); return; }
   const s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.onload=()=>{ google.accounts.id.initialize({client_id:CFG.clientId,callback:r=>onTok(r.credential),ux_mode:"popup",use_fedcm_for_button:true}); google.accounts.id.renderButton($("gbtn"),{theme:"filled_blue",size:"large",shape:"pill",locale:"vi"}); }; document.head.appendChild(s); }
 $("out").onclick=()=>{ LS.del("adm_tok"); location.reload(); };
@@ -128,7 +116,7 @@ async function loadMail(){ try{ const j=await mail({op:"list"}); S.regs=j.regs; 
 /* ---------- giao diện ---------- */
 function render(){ if(!S.tok) return loginView();
   const nReg=(S.regs||[]).length, nErr=(S.errs||[]).length;
-  const tabs=[["br","🏢 Các chi nhánh"],["bulk","➕ Tạo nhiều chi nhánh"],["reg","⏳ Kho chờ duyệt"+(nReg?`<span class="n">${nReg}</span>`:"")],["err","⚠️ Báo lỗi từ app"+(nErr?`<span class="n">${nErr}</span>`:"")],["set","⚙️ Cài đặt"]];
+  const tabs=[["br","Chi nhánh"],["bulk","Tạo hàng loạt"],["reg","Kho chờ duyệt"+(nReg?`<span class="n">${nReg}</span>`:"")],["err","Lỗi app"+(nErr?`<span class="n">${nErr}</span>`:"")],["set","Cài đặt"]];
   $("main").innerHTML=`<nav class="tabs" role="tablist">${tabs.map(([k,t])=>`<button type="button" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${t}</button>`).join("")}</nav>`+
     (!ghTok()?`<div class="card" style="border-color:var(--amber)"><b>Chưa có khoá GitHub.</b> <span class="muted">Xem được danh sách nhưng chưa lưu được. Vào <a href="#" data-tab="set">Cài đặt</a> để thêm khoá.</span></div>`:"")+
     ({br:vBr,bulk:vBulk,reg:vReg,err:vErr,set:vSet}[S.tab])();
@@ -136,13 +124,13 @@ function render(){ if(!S.tok) return loginView();
 function vBr(){ const all=S.data.branches, q=slugOf("",S.q), list=all.filter(b=>!q||b.id.includes(q)||slugOf("",label(b)).includes(q));
   const on=all.filter(b=>!b.off), withKho=on.filter(b=>b.kho).length;
   return `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${on.length} chi nhánh</b> <span class="muted">· ${withKho} đã cài kho · ${on.length-withKho} chưa cài${all.length>on.length?` · ${all.length-on.length} đang ẩn`:""}</span></div>
-    <div class="row"><button class="btn sm" id="pingAll" ${S.chk?"disabled":""}>🔍 Kiểm tra tất cả kho</button><button class="btn ghost sm" id="csv">📥 Tải danh sách link</button></div></div>
+    <div class="row"><button class="btn sm" id="pingAll" ${S.chk?"disabled":""}>Kiểm tra tất cả kho</button><button class="btn ghost sm" id="csv">Xuất danh sách link</button></div></div>
     ${S.chk?`<div class="prog"><i id="chkp"></i></div><div class="muted" id="chkt">Đang kiểm tra…</div>`:""}
-    <input id="q" placeholder="🔍 Gõ tên chi nhánh để tìm…" value="${esc(S.q)}" style="margin-top:10px"></div>
+    <input id="q" placeholder="Tìm chi nhánh…" value="${esc(S.q)}" style="margin-top:10px"></div>
     <div class="list">${list.slice(0,S.show).map(b=>{ const st=S.st[b.id]||(b.kho?{k:"warn",t:"Chưa kiểm tra"}:{k:"off",t:"Chưa cài kho"}); const link=site()+"/"+b.slug;
       return `<div class="br" style="${b.off?"opacity:.55":""}"><div><div class="nm">${esc(label(b))}${b.off?' <span class="chip off">đang ẩn</span>':""}</div><code>${esc(link.replace(/^https?:\/\//,""))}</code></div><span class="chip ${st.k}" data-st="${esc(b.id)}">${esc(st.t)}</span>
-      <div class="acts"><button class="btn ghost sm" data-copy="${esc(link)}">📋 Chép link</button>${b.kho?`<button class="btn ghost sm" data-ping="${esc(b.id)}">🔍 Kiểm tra kho</button>`:""}<button class="btn ghost sm" data-code="${esc(b.id)}">Mã kho</button><button class="btn ghost sm" data-kho="${esc(b.id)}">${b.kho?"Đổi link kho":"Nhập link kho"}</button><button class="btn ghost sm" data-off="${esc(b.id)}">${b.off?"Hiện lại":"Tạm ẩn"}</button></div></div>`; }).join("")||'<p class="muted">Chưa có chi nhánh. Vào "Tạo hàng loạt" để thêm.</p>'}</div>
-    ${list.length>S.show?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="more">⬇️ Xem thêm (${list.length-S.show})</button></div>`:""}`; }
+      <div class="acts"><button class="btn ghost sm" data-copy="${esc(link)}">Sao chép link</button>${b.kho?`<button class="btn ghost sm" data-ping="${esc(b.id)}">Kiểm tra kho</button>`:""}<button class="btn ghost sm" data-code="${esc(b.id)}">Mã kho</button><button class="btn ghost sm" data-kho="${esc(b.id)}">${b.kho?"Đổi link kho":"Nhập link kho"}</button><button class="btn ghost sm" data-off="${esc(b.id)}">${b.off?"Hiện lại":"Tạm ẩn"}</button></div></div>`; }).join("")||'<p class="muted">Chưa có chi nhánh. Vào "Tạo hàng loạt" để thêm.</p>'}</div>
+    ${list.length>S.show?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="more">Xem thêm (${list.length-S.show})</button></div>`:""}`; }
 function parseBulk(txt){ const have=new Set(S.data.branches.map(b=>b.id)), seen=new Set();
   return txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{ let p=l.split(/\t|\s*[,;·|]\s*/).map(x=>x.trim()).filter(Boolean); let sys="", name="";
     if(p.length>=2&&SYSL.includes(p[0].toUpperCase())){ sys=p[0].toUpperCase(); name=p.slice(1).join(" "); }
@@ -150,9 +138,9 @@ function parseBulk(txt){ const have=new Set(S.data.branches.map(b=>b.id)), seen=
     const slug=slugOf(sys,name), err=!sys?"Thiếu hệ (HPL, ACR, CP, HPO)":!name?"Thiếu tên":have.has(slug)?"Đã có":seen.has(slug)?"Trùng trong danh sách":"";
     seen.add(slug); return {sys,name,slug,err}; }); }
 function vBulk(){ const b=S.bulk;
-  return `<div class="card"><h2>➕ Tạo nhiều chi nhánh cùng lúc</h2><p class="muted">Mỗi dòng một chi nhánh: <b>hệ</b> và <b>tên</b>. Dán thẳng 2 cột từ Excel được. Ví dụ:<br><code>HPL&nbsp;&nbsp;Quận 2</code> · <code>ACR, Thủ Đức</code> · <code>CP · Bình Thạnh</code></p>
+  return `<div class="card"><h2>Tạo nhiều chi nhánh cùng lúc</h2><p class="muted">Mỗi dòng một chi nhánh: <b>hệ</b> và <b>tên</b>. Dán thẳng 2 cột từ Excel được. Ví dụ:<br><code>HPL&nbsp;&nbsp;Quận 2</code> · <code>ACR, Thủ Đức</code> · <code>CP · Bình Thạnh</code></p>
     <textarea id="bulkTxt" placeholder="HPL	Quận 2&#10;HPL	Quận 3&#10;ACR	Thủ Đức">${esc(b?b.txt:"")}</textarea>
-    <div class="row" style="margin-top:10px"><button class="btn ghost" id="bulkPrev">👁 Xem trước</button></div></div>
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="bulkPrev">Xem trước</button></div></div>
     ${b&&b.rows?`<div class="card"><div class="row" style="justify-content:space-between"><b>${b.rows.filter(r=>!r.err).length} chi nhánh mới</b>${b.rows.some(r=>r.err)?`<span class="muted">${b.rows.filter(r=>r.err).length} dòng bỏ qua</span>`:""}</div>
       <div class="tw"><table><tr><th>Hệ</th><th>Tên</th><th>Link riêng</th><th></th></tr>${b.rows.map(r=>`<tr><td>${esc(r.sys)}</td><td>${esc(r.name)}</td><td><code>${esc(r.slug?site().replace(/^https?:\/\//,"")+"/"+r.slug:"")}</code></td><td>${r.err?`<span class="chip bad">${esc(r.err)}</span>`:'<span class="chip ok">Mới</span>'}</td></tr>`).join("")}</table></div>
       <div class="row" style="margin-top:12px"><button class="btn" id="bulkSave" ${S.busy||!b.rows.some(r=>!r.err)?"disabled":""}>${S.busy?"Đang lưu…":`Lưu ${b.rows.filter(r=>!r.err).length} chi nhánh lên GitHub`}</button></div>
@@ -160,20 +148,20 @@ function vBulk(){ const b=S.bulk;
 function vReg(){ const r=S.regs;
   if(r===null) return `<div class="card"><p class="muted">Đang tải hộp thư…</p></div>`;
   const byId=Object.fromEntries(S.data.branches.map(b=>[b.id,b]));
-  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Kho chờ duyệt</h2><button class="btn ghost sm" id="reload">🔄 Tải lại</button></div>
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Kho chờ duyệt</h2><button class="btn ghost sm" id="reload">Tải lại</button></div>
     <p class="muted">GĐ chi nhánh cài kho xong gửi link về đây. Kiểm tra đúng chi nhánh rồi duyệt để đưa vào danh sách.</p>
     ${r.length?`<div class="list">${r.map(x=>{ const b=byId[x.c[0]], okKho=/^kho /.test(x.c[3])&&!/chưa caiDat/.test(x.c[3])&&x.c[3].indexOf("kho "+x.c[0]+" ")===0;
       return `<label class="br" style="cursor:pointer"><div><div class="nm"><input type="checkbox" data-rg="${x.row}" ${okKho&&b?"checked":""} style="width:auto;margin-right:8px">${esc(b?label(b):x.c[1]||x.c[0])}</div><code>${esc(x.c[2])}</code><div class="muted">${new Date(x.at).toLocaleString("vi-VN")}${b&&b.kho?" · sẽ thay link kho cũ":""}</div></div><span class="chip ${!b?"bad":okKho?"ok":"bad"}">${esc(!b?"Không có chi nhánh "+x.c[0]:x.c[3])}</span></label>`; }).join("")}</div>
-      <div class="row" style="margin-top:12px"><button class="btn" id="regOk" ${S.busy?"disabled":""}>✅ Duyệt các kho đã tích</button><button class="btn ghost" id="regNo" ${S.busy?"disabled":""}>✖ Từ chối các kho đã tích</button></div>`:'<p class="muted">Không có kho nào chờ duyệt.</p>'}</div>`; }
+      <div class="row" style="margin-top:12px"><button class="btn" id="regOk" ${S.busy?"disabled":""}>Duyệt đã chọn</button><button class="btn ghost" id="regNo" ${S.busy?"disabled":""}>Bỏ đã chọn</button></div>`:'<p class="muted">Không có kho nào chờ duyệt.</p>'}</div>`; }
 function vErr(){ const e=S.errs;
   if(e===null) return `<div class="card"><p class="muted">Đang tải hộp thư…</p></div>`;
-  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Lỗi app gần đây</h2><div class="row">${S.sheet?`<a class="btn ghost sm" href="${esc(S.sheet)}" target="_blank" rel="noopener">Mở Google Sheet</a>`:""}<button class="btn ghost sm" id="reload">🔄 Tải lại</button></div></div>
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Lỗi app gần đây</h2><div class="row">${S.sheet?`<a class="btn ghost sm" href="${esc(S.sheet)}" target="_blank" rel="noopener">Mở Google Sheet</a>`:""}<button class="btn ghost sm" id="reload">Tải lại</button></div></div>
     <p class="muted">App tự gửi khi gặp lỗi: thời gian, chi nhánh, phiên bản, loại máy, câu báo lỗi. Không có dữ liệu ba mẹ.</p>
     ${e.length?`<div class="list">${e.map(x=>`<div class="br"><div><b>${esc(x.c[0]||"?")}</b> <span class="muted">· v${esc(x.c[1])} · ${new Date(x.at).toLocaleString("vi-VN")}</span><pre class="err">${esc(x.c[4])}</pre><div class="muted" style="font-size:12px">${esc(x.c[2]).slice(0,120)}</div></div></div>`).join("")}</div>`:'<p class="muted">Chưa có lỗi nào. 🎉</p>'}</div>`; }
-function vSet(){ return `<div class="card"><h2>🔑 Khóa kết nối GitHub</h2><p class="muted">Để trang này lưu danh sách chi nhánh lên GitHub. Khoá chỉ lưu trong trình duyệt máy này, không gửi đi đâu khác.</p>
+function vSet(){ return `<div class="card"><h2>Khoá GitHub</h2><p class="muted">Để trang này lưu danh sách chi nhánh lên GitHub. Khoá chỉ lưu trong trình duyệt máy này, không gửi đi đâu khác.</p>
     <ol class="muted" style="padding-left:20px"><li>Mở <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li><li>Tên: <b>Quan tri So CSKH</b>. Expiration: <b>No expiration</b> (không hạn; nếu không có lựa chọn này thì chọn ngày xa nhất). Resource owner: <b>ghl-cskh</b>.</li><li>Repository access: <b>Only select repositories</b> → chọn <b>${esc(CFG.repo||"")}</b>.</li><li>Permissions → Repository → <b>Contents: Read and write</b>. Bấm Generate, sao chép khoá dán vào đây.</li></ol>
-    <input id="ghTok" type="password" placeholder="github_pat_…" value="${esc(ghTok())}"><div class="row" style="margin-top:10px"><button class="btn" id="ghSave">💾 Lưu và kiểm tra</button>${ghTok()?'<button class="btn ghost" id="ghDel">Xoá khoá</button>':""}</div></div>
-    <div class="card"><h2>ℹ️ Thông tin chung</h2><p class="muted">Kho code: <b>${esc(CFG.repo||"")}</b><br>Trang chi nhánh: <b>${esc(site())}</b>/&lt;mã chi nhánh&gt;</p></div>`; }
+    <input id="ghTok" type="password" placeholder="github_pat_…" value="${esc(ghTok())}"><div class="row" style="margin-top:10px"><button class="btn" id="ghSave">Lưu & kiểm tra</button>${ghTok()?'<button class="btn ghost" id="ghDel">Xoá khoá</button>':""}</div></div>
+    <div class="card"><h2>Thông tin</h2><p class="muted">Kho code: <b>${esc(CFG.repo||"")}</b><br>Trang chi nhánh: <b>${esc(site())}</b>/&lt;mã chi nhánh&gt;</p></div>`; }
 function modal(html){ const m=document.createElement("div"); m.className="modal"; m.innerHTML=`<div class="card">${html}</div>`; document.body.appendChild(m); m.addEventListener("click",e=>{ if(e.target===m||e.target.closest("[data-x]")) m.remove(); }); return m; }
 const khoCode=b=>KHO_GS.split("__BID__").join(b.id).split("__BNAME__").join(label(b)).split("__CLIENT__").join(CFG.clientId||"");
 
