@@ -14,6 +14,7 @@ kho = open(D+'apps-script/Kho_dau.gs').read() + '\n' + tail + '\n\n' + open(D+'a
 open(D+'apps-script/Kho_full.gs', 'w').write(kho)
 # 2. app chi nhánh: vá app gốc v48 (bỏ Firebase, thêm lớp kho, các thay đổi v2/v2.1)
 subprocess.run(['python3', D+'p2.py', D+'app_goc_v48.html', D+'_app.html'], check=True)
+subprocess.run(['python3', D+'p3.py', D+'_app.html'], check=True)   # v2.2: giao diện dễ dùng
 # 3. app quản trị
 open(D+'_admin.html', 'w').write(open(D+'admin.html').read().replace('KHO_GS=__KHO_GS__', 'KHO_GS='+js(kho)))
 # 4. nén và chép ra trang

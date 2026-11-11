@@ -24,7 +24,7 @@ rep('''<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-ap
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 ''')
 rep('/* ---------- Boot (Firebase) ---------- */', '/* ---------- Boot (kho Google Sheet của chi nhánh) ---------- */')
-rep('<meta name="app-v" content="48">', '<meta name="app-v" content="50">')
+rep('<meta name="app-v" content="48">', '<meta name="app-v" content="51">')
 # đường dẫn tuyệt đối (link /hpl-quan-7 trên GitHub Pages dùng 404.html)
 s = s.replace('href="manifest.json"', 'href="/manifest.json"').replace('register("sw.js")', 'register("/sw.js")')
 s = s.replace('src="icon-192.png"', 'src="/icon-192.png"').replace('href="icon-192.png"', 'href="/icon-192.png"')
