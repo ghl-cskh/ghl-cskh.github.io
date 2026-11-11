@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-11T15:51:21.717Z",
+ "updatedAt": "2026-11-11T15:52:06.569Z",
  "branches": [
   {
    "id": "hpl-q7",
@@ -21,7 +21,8 @@
    "slug": "hpl-quan7",
    "sys": "HPL",
    "name": "Quận7",
-   "createdAt": "2026-11-11T15:51:21.717Z"
+   "createdAt": "2026-11-11T15:51:21.717Z",
+   "kho": "https://script.google.com/macros/s/AKfycbzC9po0-YuzYQMcZuAhAxyO8Ybx0i8rp9XZ2JvydQJ_iNYUn-puJX_GlQNxZfu9h49t/exec"
   }
  ]
 }
