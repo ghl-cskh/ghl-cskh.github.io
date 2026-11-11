@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-11T15:45:38.315Z",
+ "updatedAt": "2026-11-11T15:50:10.651Z",
  "branches": [
   {
    "id": "hpl-q7",
@@ -7,7 +7,8 @@
    "sys": "HPL",
    "name": "Q7",
    "createdAt": "2026-11-11T14:05:10.707Z",
-   "kho": "https://script.google.com/macros/s/AKfycbzC9po0-YuzYQMcZuAhAxyO8Ybx0i8rp9XZ2JvydQJ_iNYUn-puJX_GlQNxZfu9h49t/exec"
+   "kho": "https://script.google.com/macros/s/AKfycbzC9po0-YuzYQMcZuAhAxyO8Ybx0i8rp9XZ2JvydQJ_iNYUn-puJX_GlQNxZfu9h49t/exec",
+   "off": true
   },
   {
    "id": "acr-q4",
