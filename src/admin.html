@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Quản trị Sổ CSKH</title>
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/config.js"></script>
+<style>
+:root{--bg:#fff7f6;--surface:#fff;--ink:#2a1215;--muted:#7a5a5d;--line:#f3dcda;--accent:#B5001B;--accent-soft:#FCE3E5;--ok:#15803d;--ok-soft:#e6f6ea;--amber:#b45309;--amber-soft:#fef3e2;--bad:#b91c1c;--bad-soft:#fee2e2;--hdr:linear-gradient(135deg,#8a0016,#c8102e)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#170c0e;--surface:#241417;--ink:#f6e9ea;--muted:#c4a6a9;--line:#3d2427;--accent:#ff5a6e;--accent-soft:#3a1a1f;--ok:#4ade80;--ok-soft:#14301d;--amber:#fbbf24;--amber-soft:#33270f;--bad:#f87171;--bad-soft:#3b1515}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Be Vietnam Pro",system-ui,sans-serif}
+header{background:var(--hdr);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:18px;font-weight:800;flex:1;min-width:0}
+header small{display:block;font-weight:500;opacity:.85;font-size:12.5px;overflow:hidden;text-overflow:ellipsis}
+main{max-width:980px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+.tabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 14px inherit;font-family:inherit;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tabs .n{display:inline-block;min-width:20px;margin-left:4px;padding:0 6px;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-size:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:16px}
+.btn{border:0;border-radius:999px;padding:9px 16px;font:600 14px inherit;font-family:inherit;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted);font-size:13.5px}
+input,textarea{width:100%;font:14px inherit;font-family:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:150px}
+.list{display:flex;flex-direction:column;gap:8px}
+.br{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.br .nm{font-weight:700}.br code{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.br .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.warn{background:var(--amber-soft);color:var(--amber)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.off{background:var(--line);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{text-align:left;padding:6px 8px;border-top:1px solid var(--line);vertical-align:top}th{background:var(--accent-soft)}
+.tw{overflow-x:auto}
+.err{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;max-height:120px;overflow:auto;margin:4px 0 0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2a1215;color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;z-index:50;max-width:92vw}
+.login{max-width:420px;margin:40px auto;text-align:center}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px}.prog i{display:block;height:100%;background:var(--accent);width:0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .card{width:min(640px,100%);max-height:90vh;overflow:auto;margin:0}
+code.blk{display:block;white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:8px;max-height:140px;overflow:auto}
+</style>
+</head>
+<body>
+<header><h1>Quản trị Sổ CSKH<small id="who">Chưa đăng nhập</small></h1><button type="button" class="btn ghost sm" id="out" hidden style="color:#fff;border-color:rgba(255,255,255,.5)">Đăng xuất</button></header>
+<main id="main"><div class="card login"><p>Đang mở…</p></div></main>
+<div id="toast" hidden></div>
+<script>
+"use strict";
+const CFG=window.SHEETDB||{}, KHO_GS=__KHO_GS__;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+const toast=m=>{const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3500)};
+const SYSL=["HPL","ACR","CP","HPO"];
+const slugOf=(sys,name)=>String((sys||"")+" "+(name||"")).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+const site=()=>(CFG.site||location.origin).replace(/\/$/,"");
+const label=b=>(b.sys?b.sys+" · ":"")+b.name;
+const KHO_RE=/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
+const S={tok:"",email:"",data:null,sha:null,tab:"br",q:"",show:50,st:{},regs:null,errs:null,sheet:"",bulk:null,busy:false,chk:null};
+
+/* ---------- đăng nhập (chỉ Gmail admin) ---------- */
+async function sha256(s){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+function tokEmail(t){ if(/^demo\|/.test(t)) return t.split("|")[1]; try{ const p=JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))))); return p.exp*1000>Date.now()&&p.email_verified?String(p.email).toLowerCase():""; }catch(e){ return ""; } }
+async function onTok(t){ const em=tokEmail(t); if(!em){ toast("Đăng nhập không hợp lệ"); return; }
+  if(await sha256(em)!==CFG.adminHash){ $("main").innerHTML=`<div class="card login"><h2>Không có quyền</h2><p class="muted">${esc(em)} không phải Gmail quản trị.</p><button class="btn" onclick="LS.del('adm_tok');location.reload()">Đăng nhập Gmail khác</button></div>`; return; }
+  S.tok=t; S.email=em; LS.set("adm_tok",t); $("who").textContent=em; $("out").hidden=false; await loadBranches(); render(); }
+function loginView(){ $("main").innerHTML=`<div class="card login"><h2>Đăng nhập quản trị</h2><p class="muted">Chỉ Gmail quản trị vào được trang này.</p><div id="gbtn" style="display:flex;justify-content:center;margin-top:12px"></div></div>`;
+  if(window.__sdbMockLogin){ $("gbtn").innerHTML=`<button class="btn" id="mk">Đăng nhập bằng Google</button>`; $("mk").onclick=async()=>onTok(await window.__sdbMockLogin()); return; }
+  const s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.onload=()=>{ google.accounts.id.initialize({client_id:CFG.clientId,callback:r=>onTok(r.credential),ux_mode:"popup",use_fedcm_for_button:true}); google.accounts.id.renderButton($("gbtn"),{theme:"filled_blue",size:"large",shape:"pill",locale:"vi"}); }; document.head.appendChild(s); }
+$("out").onclick=()=>{ LS.del("adm_tok"); location.reload(); };
+
+/* ---------- GitHub: đọc/lưu branches.json ---------- */
+const ghTok=()=>LS.get("adm_gh")||"";
+function ghFetch(url,o){ o=o||{}; o.headers=Object.assign({"Accept":"application/vnd.github+json","Authorization":"Bearer "+ghTok()},o.headers||{}); return (window.__pvGitHub||fetch)(url,o); }
+const b64u=s=>btoa(unescape(encodeURIComponent(s))), ub64=s=>decodeURIComponent(escape(atob(String(s).replace(/\s/g,""))));
+const apiUrl=()=>`https://api.github.com/repos/${CFG.repo}/contents/branches.json`;
+async function loadBranches(){
+  try{ if(ghTok()){ const r=await ghFetch(apiUrl()); if(r.status===404){ S.data={branches:[]}; S.sha=null; return; } if(!r.ok) throw new Error("GitHub "+r.status);
+      const j=await r.json(); S.sha=j.sha; S.data=JSON.parse(ub64(j.content)); }
+    else { const r=await (window.__pvBranchesFetch||fetch)("/branches.json?t="+Date.now(),{cache:"no-store"}); S.data=r.ok?await r.json():{branches:[]}; S.sha=null; } }
+  catch(e){ S.data=S.data||{branches:[]}; toast("Chưa tải được danh sách: "+e.message); }
+  if(!Array.isArray(S.data.branches)) S.data.branches=[]; }
+async function saveBranches(next,msg){ if(!ghTok()) throw new Error("Chưa có khoá GitHub (vào mục Cài đặt)");
+  await loadBranches(); const data=next(JSON.parse(JSON.stringify(S.data))); data.updatedAt=new Date().toISOString();
+  const r=await ghFetch(apiUrl(),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg,content:b64u(JSON.stringify(data,null,1)+"\n"),sha:S.sha||undefined})});
+  if(!r.ok){ const t=await r.text(); throw new Error(r.status===409?"Danh sách vừa bị sửa ở nơi khác, thử lại":"GitHub "+r.status+" "+t.slice(0,120)); }
+  const j=await r.json(); S.sha=j.content&&j.content.sha; S.data=data; }
+
+/* ---------- kho: hỏi "còn chạy không" (không đụng dữ liệu) ---------- */
+async function ping(b){ if(!b.kho){ S.st[b.id]={k:"off",t:"Chưa cài kho"}; return; }
+  S.st[b.id]={k:"warn",t:"Đang kiểm tra…"}; paintSt(b.id);
+  try{ const j=window.__sdbMock?await window.__sdbMock(b.kho,{op:"ping"}):await (await fetch(b.kho,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:'{"op":"ping"}'})).json();
+    S.st[b.id]= j.role!=="kho"?{k:"bad",t:"Link không phải kho"}: j.branch!==b.id?{k:"bad",t:"Kho của chi nhánh khác"}: !j.ready?{k:"warn",t:"Kho chưa caiDat"}:{k:"ok",t:"Kho chạy · v"+j.v}; }
+  catch(e){ S.st[b.id]={k:"bad",t:"Kho không phản hồi"}; }
+  paintSt(b.id); }
+function paintSt(id){ const el=document.querySelector(`[data-st="${CSS.escape(id)}"]`); const s=S.st[id]; if(el&&s){ el.className="chip "+s.k; el.textContent=s.t; } }
+async function pingAll(){ const list=S.data.branches.filter(b=>!b.off&&b.kho); if(!list.length){ toast("Chưa chi nhánh nào cài kho"); return; }
+  S.chk={n:0,tot:list.length}; render(); let i=0;
+  const worker=async()=>{ while(i<list.length){ const b=list[i++]; await ping(b); S.chk.n++; const p=$("chkp"); if(p){ p.style.width=(100*S.chk.n/S.chk.tot)+"%"; $("chkt").textContent=`Đã kiểm tra ${S.chk.n}/${S.chk.tot}`; } } };
+  await Promise.all(Array.from({length:12},worker));
+  const bad=list.filter(b=>S.st[b.id]&&S.st[b.id].k!=="ok").length; S.chk=null; render(); toast(bad?`${bad} kho có vấn đề`:"Tất cả kho đang chạy"); }
+
+/* ---------- hộp thư: kho chờ duyệt + lỗi app ---------- */
+async function mail(q){ const b=Object.assign({},q,{idToken:S.tok}); const j=window.__sdbMock?await window.__sdbMock(CFG.mailbox,b):await (await fetch(CFG.mailbox,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(b)})).json(); if(!j.ok) throw new Error(j.error||"Hộp thư lỗi"); return j; }
+async function loadMail(){ try{ const j=await mail({op:"list"}); S.regs=j.regs; S.errs=j.errs; S.sheet=j.sheet; }catch(e){ S.regs=S.regs||[]; S.errs=S.errs||[]; toast(/Chỉ admin/.test(e.message)?"Phiên đăng nhập hết hạn, đăng nhập lại":"Hộp thư: "+e.message); if(/Chỉ admin/.test(e.message)){ LS.del("adm_tok"); setTimeout(()=>location.reload(),1500);} } render(); }
+
+/* ---------- giao diện ---------- */
+function render(){ if(!S.tok) return loginView();
+  const nReg=(S.regs||[]).length, nErr=(S.errs||[]).length;
+  const tabs=[["br","Chi nhánh"],["bulk","Tạo hàng loạt"],["reg","Kho chờ duyệt"+(nReg?`<span class="n">${nReg}</span>`:"")],["err","Lỗi app"+(nErr?`<span class="n">${nErr}</span>`:"")],["set","Cài đặt"]];
+  $("main").innerHTML=`<nav class="tabs" role="tablist">${tabs.map(([k,t])=>`<button type="button" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${t}</button>`).join("")}</nav>`+
+    (!ghTok()?`<div class="card" style="border-color:var(--amber)"><b>Chưa có khoá GitHub.</b> <span class="muted">Xem được danh sách nhưng chưa lưu được. Vào <a href="#" data-tab="set">Cài đặt</a> để thêm khoá.</span></div>`:"")+
+    ({br:vBr,bulk:vBulk,reg:vReg,err:vErr,set:vSet}[S.tab])();
+  if((S.tab==="reg"||S.tab==="err")&&S.regs===null) loadMail(); }
+function vBr(){ const all=S.data.branches, q=slugOf("",S.q), list=all.filter(b=>!q||b.id.includes(q)||slugOf("",label(b)).includes(q));
+  const on=all.filter(b=>!b.off), withKho=on.filter(b=>b.kho).length;
+  return `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${on.length} chi nhánh</b> <span class="muted">· ${withKho} đã cài kho · ${on.length-withKho} chưa cài${all.length>on.length?` · ${all.length-on.length} đang ẩn`:""}</span></div>
+    <div class="row"><button class="btn sm" id="pingAll" ${S.chk?"disabled":""}>Kiểm tra tất cả kho</button><button class="btn ghost sm" id="csv">Xuất danh sách link</button></div></div>
+    ${S.chk?`<div class="prog"><i id="chkp"></i></div><div class="muted" id="chkt">Đang kiểm tra…</div>`:""}
+    <input id="q" placeholder="Tìm chi nhánh…" value="${esc(S.q)}" style="margin-top:10px"></div>
+    <div class="list">${list.slice(0,S.show).map(b=>{ const st=S.st[b.id]||(b.kho?{k:"warn",t:"Chưa kiểm tra"}:{k:"off",t:"Chưa cài kho"}); const link=site()+"/"+b.slug;
+      return `<div class="br" style="${b.off?"opacity:.55":""}"><div><div class="nm">${esc(label(b))}${b.off?' <span class="chip off">đang ẩn</span>':""}</div><code>${esc(link.replace(/^https?:\/\//,""))}</code></div><span class="chip ${st.k}" data-st="${esc(b.id)}">${esc(st.t)}</span>
+      <div class="acts"><button class="btn ghost sm" data-copy="${esc(link)}">Sao chép link</button>${b.kho?`<button class="btn ghost sm" data-ping="${esc(b.id)}">Kiểm tra kho</button>`:""}<button class="btn ghost sm" data-code="${esc(b.id)}">Mã kho</button><button class="btn ghost sm" data-kho="${esc(b.id)}">${b.kho?"Đổi link kho":"Nhập link kho"}</button><button class="btn ghost sm" data-off="${esc(b.id)}">${b.off?"Hiện lại":"Tạm ẩn"}</button></div></div>`; }).join("")||'<p class="muted">Chưa có chi nhánh. Vào "Tạo hàng loạt" để thêm.</p>'}</div>
+    ${list.length>S.show?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" id="more">Xem thêm (${list.length-S.show})</button></div>`:""}`; }
+function parseBulk(txt){ const have=new Set(S.data.branches.map(b=>b.id)), seen=new Set();
+  return txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{ let p=l.split(/\t|\s*[,;·|]\s*/).map(x=>x.trim()).filter(Boolean); let sys="", name="";
+    if(p.length>=2&&SYSL.includes(p[0].toUpperCase())){ sys=p[0].toUpperCase(); name=p.slice(1).join(" "); }
+    else { const m=l.match(/^(HPL|ACR|CP|HPO)\s+(.+)$/i); if(m){ sys=m[1].toUpperCase(); name=m[2].trim(); } else name=p.join(" "); }
+    const slug=slugOf(sys,name), err=!sys?"Thiếu hệ (HPL, ACR, CP, HPO)":!name?"Thiếu tên":have.has(slug)?"Đã có":seen.has(slug)?"Trùng trong danh sách":"";
+    seen.add(slug); return {sys,name,slug,err}; }); }
+function vBulk(){ const b=S.bulk;
+  return `<div class="card"><h2>Tạo nhiều chi nhánh cùng lúc</h2><p class="muted">Mỗi dòng một chi nhánh: <b>hệ</b> và <b>tên</b>. Dán thẳng 2 cột từ Excel được. Ví dụ:<br><code>HPL&nbsp;&nbsp;Quận 2</code> · <code>ACR, Thủ Đức</code> · <code>CP · Bình Thạnh</code></p>
+    <textarea id="bulkTxt" placeholder="HPL	Quận 2&#10;HPL	Quận 3&#10;ACR	Thủ Đức">${esc(b?b.txt:"")}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="bulkPrev">Xem trước</button></div></div>
+    ${b&&b.rows?`<div class="card"><div class="row" style="justify-content:space-between"><b>${b.rows.filter(r=>!r.err).length} chi nhánh mới</b>${b.rows.some(r=>r.err)?`<span class="muted">${b.rows.filter(r=>r.err).length} dòng bỏ qua</span>`:""}</div>
+      <div class="tw"><table><tr><th>Hệ</th><th>Tên</th><th>Link riêng</th><th></th></tr>${b.rows.map(r=>`<tr><td>${esc(r.sys)}</td><td>${esc(r.name)}</td><td><code>${esc(r.slug?site().replace(/^https?:\/\//,"")+"/"+r.slug:"")}</code></td><td>${r.err?`<span class="chip bad">${esc(r.err)}</span>`:'<span class="chip ok">Mới</span>'}</td></tr>`).join("")}</table></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="bulkSave" ${S.busy||!b.rows.some(r=>!r.err)?"disabled":""}>${S.busy?"Đang lưu…":`Lưu ${b.rows.filter(r=>!r.err).length} chi nhánh lên GitHub`}</button></div>
+      <p class="muted">Lưu xong khoảng 1–2 phút các link chạy. Mỗi link hiện "chưa cài kho" kèm hướng dẫn cho GĐ chi nhánh tới khi GĐ cài kho và bạn duyệt.</p></div>`:""}`; }
+function vReg(){ const r=S.regs;
+  if(r===null) return `<div class="card"><p class="muted">Đang tải hộp thư…</p></div>`;
+  const byId=Object.fromEntries(S.data.branches.map(b=>[b.id,b]));
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Kho chờ duyệt</h2><button class="btn ghost sm" id="reload">Tải lại</button></div>
+    <p class="muted">GĐ chi nhánh cài kho xong gửi link về đây. Kiểm tra đúng chi nhánh rồi duyệt để đưa vào danh sách.</p>
+    ${r.length?`<div class="list">${r.map(x=>{ const b=byId[x.c[0]], okKho=/^kho /.test(x.c[3])&&!/chưa caiDat/.test(x.c[3])&&x.c[3].indexOf("kho "+x.c[0]+" ")===0;
+      return `<label class="br" style="cursor:pointer"><div><div class="nm"><input type="checkbox" data-rg="${x.row}" ${okKho&&b?"checked":""} style="width:auto;margin-right:8px">${esc(b?label(b):x.c[1]||x.c[0])}</div><code>${esc(x.c[2])}</code><div class="muted">${new Date(x.at).toLocaleString("vi-VN")}${b&&b.kho?" · sẽ thay link kho cũ":""}</div></div><span class="chip ${!b?"bad":okKho?"ok":"bad"}">${esc(!b?"Không có chi nhánh "+x.c[0]:x.c[3])}</span></label>`; }).join("")}</div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="regOk" ${S.busy?"disabled":""}>Duyệt đã chọn</button><button class="btn ghost" id="regNo" ${S.busy?"disabled":""}>Bỏ đã chọn</button></div>`:'<p class="muted">Không có kho nào chờ duyệt.</p>'}</div>`; }
+function vErr(){ const e=S.errs;
+  if(e===null) return `<div class="card"><p class="muted">Đang tải hộp thư…</p></div>`;
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Lỗi app gần đây</h2><div class="row">${S.sheet?`<a class="btn ghost sm" href="${esc(S.sheet)}" target="_blank" rel="noopener">Mở Google Sheet</a>`:""}<button class="btn ghost sm" id="reload">Tải lại</button></div></div>
+    <p class="muted">App tự gửi khi gặp lỗi: thời gian, chi nhánh, phiên bản, loại máy, câu báo lỗi. Không có dữ liệu ba mẹ.</p>
+    ${e.length?`<div class="list">${e.map(x=>`<div class="br"><div><b>${esc(x.c[0]||"?")}</b> <span class="muted">· v${esc(x.c[1])} · ${new Date(x.at).toLocaleString("vi-VN")}</span><pre class="err">${esc(x.c[4])}</pre><div class="muted" style="font-size:12px">${esc(x.c[2]).slice(0,120)}</div></div></div>`).join("")}</div>`:'<p class="muted">Chưa có lỗi nào. 🎉</p>'}</div>`; }
+function vSet(){ return `<div class="card"><h2>Khoá GitHub</h2><p class="muted">Để trang này lưu danh sách chi nhánh lên GitHub. Khoá chỉ lưu trong trình duyệt máy này, không gửi đi đâu khác.</p>
+    <ol class="muted" style="padding-left:20px"><li>Mở <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li><li>Tên: <b>Quan tri So CSKH</b>. Expiration: <b>No expiration</b> (không hạn; nếu không có lựa chọn này thì chọn ngày xa nhất). Resource owner: <b>ghl-cskh</b>.</li><li>Repository access: <b>Only select repositories</b> → chọn <b>${esc(CFG.repo||"")}</b>.</li><li>Permissions → Repository → <b>Contents: Read and write</b>. Bấm Generate, sao chép khoá dán vào đây.</li></ol>
+    <input id="ghTok" type="password" placeholder="github_pat_…" value="${esc(ghTok())}"><div class="row" style="margin-top:10px"><button class="btn" id="ghSave">Lưu & kiểm tra</button>${ghTok()?'<button class="btn ghost" id="ghDel">Xoá khoá</button>':""}</div></div>
+    <div class="card"><h2>Thông tin</h2><p class="muted">Kho code: <b>${esc(CFG.repo||"")}</b><br>Trang chi nhánh: <b>${esc(site())}</b>/&lt;mã chi nhánh&gt;</p></div>`; }
+function modal(html){ const m=document.createElement("div"); m.className="modal"; m.innerHTML=`<div class="card">${html}</div>`; document.body.appendChild(m); m.addEventListener("click",e=>{ if(e.target===m||e.target.closest("[data-x]")) m.remove(); }); return m; }
+const khoCode=b=>KHO_GS.split("__BID__").join(b.id).split("__BNAME__").join(label(b)).split("__CLIENT__").join(CFG.clientId||"");
+
+document.addEventListener("click",async e=>{ const t=e.target;
+  const tb=t.closest("[data-tab]"); if(tb){ e.preventDefault(); S.tab=tb.dataset.tab; render(); return; }
+  if(t.closest("#more")){ S.show+=100; render(); return; }
+  if(t.closest("#pingAll")){ pingAll(); return; }
+  const cp=t.closest("[data-copy]"); if(cp){ try{ await navigator.clipboard.writeText(cp.dataset.copy); toast("Đã sao chép link"); }catch(_){ toast(cp.dataset.copy); } return; }
+  const pg=t.closest("[data-ping]"); if(pg){ ping(S.data.branches.find(b=>b.id===pg.dataset.ping)); return; }
+  const cd=t.closest("[data-code]"); if(cd){ const b=S.data.branches.find(x=>x.id===cd.dataset.code), code=khoCode(b);
+    const m=modal(`<h2>Mã kho · ${esc(label(b))}</h2><p class="muted">Gửi cho GĐ chi nhánh nếu cần. Hướng dẫn cài cũng hiện sẵn khi GĐ mở link chi nhánh chưa có kho.</p><div class="row"><button class="btn sm" id="cc">Sao chép mã</button><button class="btn ghost sm" data-x>Đóng</button></div><code class="blk" style="margin-top:10px">${esc(code.slice(0,1200))}…</code>`);
+    m.querySelector("#cc").onclick=async()=>{ try{ await navigator.clipboard.writeText(code); toast("Đã sao chép mã kho"); }catch(_){} }; return; }
+  const kh=t.closest("[data-kho]"); if(kh){ const b=S.data.branches.find(x=>x.id===kh.dataset.kho);
+    const m=modal(`<h2>Link kho · ${esc(label(b))}</h2><input id="kurl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(b.kho||"")}"><div class="row" style="margin-top:10px"><button class="btn" id="ks">Lưu lên GitHub</button><button class="btn ghost" data-x>Huỷ</button></div><p class="muted">Để trống rồi lưu để gỡ kho khỏi chi nhánh.</p>`);
+    m.querySelector("#ks").onclick=async()=>{ const u=m.querySelector("#kurl").value.trim(); if(u&&!KHO_RE.test(u)){ toast("Link kho không hợp lệ"); return; }
+      try{ await saveBranches(d=>{ const x=d.branches.find(y=>y.id===b.id); if(x){ if(u) x.kho=u; else delete x.kho; } return d; },`Kho ${b.id}`); m.remove(); toast("Đã lưu, 1–2 phút sau có hiệu lực"); render(); if(u) ping(S.data.branches.find(y=>y.id===b.id)); }catch(err){ toast(err.message); } }; return; }
+  const of=t.closest("[data-off]"); if(of){ const id=of.dataset.off;
+    try{ await saveBranches(d=>{ const x=d.branches.find(y=>y.id===id); if(x){ if(x.off) delete x.off; else x.off=true; } return d; },`Ẩn/hiện ${id}`); render(); toast("Đã lưu"); }catch(err){ toast(err.message); } return; }
+  if(t.closest("#csv")){ const rows=[["He","Ten chi nhanh","Link rieng","Kho"]].concat(S.data.branches.filter(b=>!b.off).map(b=>[b.sys,b.name,site()+"/"+b.slug,b.kho?"Đã cài":"Chưa cài"]));
+    const csv="﻿"+rows.map(r=>r.map(x=>`"${String(x||"").replace(/"/g,'""')}"`).join(",")).join("\r\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="danh-sach-chi-nhanh.csv"; a.click(); return; }
+  if(t.closest("#bulkPrev")){ const txt=$("bulkTxt").value; S.bulk={txt,rows:parseBulk(txt)}; render(); return; }
+  if(t.closest("#bulkSave")){ const rows=S.bulk.rows.filter(r=>!r.err); S.busy=true; render();
+    try{ await saveBranches(d=>{ const have=new Set(d.branches.map(b=>b.id)); rows.forEach(r=>{ if(!have.has(r.slug)) d.branches.push({id:r.slug,slug:r.slug,sys:r.sys,name:r.name,createdAt:new Date().toISOString()}); }); return d; },`Thêm ${rows.length} chi nhánh`);
+      toast(`Đã lưu ${rows.length} chi nhánh`); S.bulk=null; S.tab="br"; }catch(err){ toast(err.message); }
+    S.busy=false; render(); return; }
+  if(t.closest("#reload")){ S.regs=null; S.errs=null; render(); return; }
+  if(t.closest("#regOk")||t.closest("#regNo")){ const ok=!!t.closest("#regOk"), rows=[...document.querySelectorAll("[data-rg]:checked")].map(c=>+c.dataset.rg); if(!rows.length){ toast("Chưa chọn kho nào"); return; }
+    const pick=S.regs.filter(x=>rows.includes(x.row)); S.busy=true; render();
+    try{ if(ok) await saveBranches(d=>{ pick.forEach(x=>{ const b=d.branches.find(y=>y.id===x.c[0]); if(b&&KHO_RE.test(x.c[2])) b.kho=x.c[2]; }); return d; },`Duyệt ${pick.length} kho`);
+      await mail({op:"done",rows,status:ok?"đã duyệt":"bỏ"}); toast(ok?`Đã duyệt ${pick.length} kho`:"Đã bỏ"); S.regs=null; }catch(err){ toast(err.message); }
+    S.busy=false; render(); return; }
+  if(t.closest("#ghSave")){ LS.set("adm_gh",$("ghTok").value.trim());
+    try{ const r=await ghFetch(apiUrl()); if(r.status!==200&&r.status!==404) throw new Error("GitHub "+r.status); toast("Khoá GitHub dùng được ✓"); await loadBranches(); render(); }catch(err){ toast("Khoá chưa dùng được: "+err.message); } return; }
+  if(t.closest("#ghDel")){ LS.del("adm_gh"); render(); return; }
+});
+document.addEventListener("input",e=>{ if(e.target.id==="q"){ S.q=e.target.value; S.show=50; const pos=e.target.selectionStart; render(); const q=$("q"); q.focus(); q.setSelectionRange(pos,pos); } });
+(async()=>{ const t=LS.get("adm_tok"); if(t&&tokEmail(t)) await onTok(t); else render(); })();
+</script>
+</body>
+</html>

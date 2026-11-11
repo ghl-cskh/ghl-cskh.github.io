@@ -1,0 +1,4 @@
+<link rel="manifest" href="/manifest.json" id="pwaManifest">
+<script>(function(){ try{ var p=(window.__pvPath||location.pathname), m=p.match(/^\/([a-z0-9][a-z0-9-]{1,60})\/?$/i); if(!m) return; var o=location.origin;
+  var j={name:"Sổ CSKH Ba Mẹ",short_name:"Sổ CSKH",id:o+"/"+m[1],start_url:o+"/"+m[1],scope:o+"/",display:"standalone",background_color:"#fff7f6",theme_color:"#B5001B",icons:[{src:o+"/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"}]};
+  document.getElementById("pwaManifest").href="data:application/manifest+json,"+encodeURIComponent(JSON.stringify(j)); }catch(e){} })();</script>

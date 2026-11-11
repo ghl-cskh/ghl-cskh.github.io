@@ -1,0 +1,5 @@
+node_modules/
+_app.html
+_admin.html
+apps-script/Kho_full.gs
+package-lock.json

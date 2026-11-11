@@ -1,0 +1,4 @@
+/* v2: màn hình lớn (máy tính, máy tính bảng ngang) dùng rộng hơn */
+@media (min-width:1100px){ main,.sheet-body,.top-row,.scope{max-width:1180px} .tabs{width:min(1180px,calc(100% - 40px))}
+  #bmList .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))} #bmList .list>.row{border-right:1px solid var(--line)} #bmList .list>.row:nth-child(2n){border-right:0} }
+@media (min-width:1600px){ #bmList .list{grid-template-columns:repeat(3,minmax(0,1fr))} #bmList .list>.row:nth-child(2n){border-right:1px solid var(--line)} #bmList .list>.row:nth-child(3n){border-right:0} }
