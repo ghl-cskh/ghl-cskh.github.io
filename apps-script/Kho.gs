@@ -228,7 +228,8 @@ function saoLuuDem(){
   const items=[];
   Object.keys(D.staff).forEach(sid=>{ const st=D.staff[sid]; (st.parents||[]).forEach(p=>{ if(p.deleted) return; items.push({sid:sid,st:st,p:p}); }); });
   nBm=items.length;
-  items.sort((a,b)=>String(a.p.tenBaMe||"").localeCompare(String(b.p.tenBaMe||""),"vi"));
+  const cm_=p=>{ const a=(p.ca||[]).map(Number).filter(n=>n>=1&&n<=13).sort((x,y)=>x-y); return a.length?a[0]:99; };
+  items.sort((a,b)=>(cm_(a.p)-cm_(b.p))||String(a.p.tenBaMe||"").localeCompare(String(b.p.tenBaMe||""),"vi"));
   const dup={}; items.forEach(it=>{ const k=safe_(it.p.tenBaMe).toLowerCase(); dup[k]=(dup[k]||0)+1; });
   for(let i=0;i<items.length;i++){
     const it=items[i], p=it.p, st=it.st, key=it.sid+"|"+p.id, rec=idx[key]||{};

@@ -15,6 +15,7 @@ open(D+'apps-script/Kho_full.gs', 'w').write(kho)
 # 2. app chi nhánh: vá app gốc v48 (bỏ Firebase, thêm lớp kho, các thay đổi v2/v2.1)
 subprocess.run(['python3', D+'p2.py', D+'app_goc_v48.html', D+'_app.html'], check=True)
 subprocess.run(['python3', D+'p3.py', D+'_app.html'], check=True)   # v2.2: giao diện dễ dùng
+subprocess.run(['python3', D+'p49.py', D+'_app.html', D+'_app.html'], check=True)   # v49: xuất file/hình, xếp ca 1–13 (dùng chung với app cũ)
 # 3. app quản trị
 open(D+'_admin.html', 'w').write(open(D+'admin.html').read().replace('KHO_GS=__KHO_GS__', 'KHO_GS='+js(kho)))
 # 4. nén và chép ra trang
@@ -23,4 +24,8 @@ subprocess.run(['node', '-e', mini, D+'_app.html', R+'index.html'], check=True, 
 subprocess.run(['cp', R+'index.html', R+'404.html'], check=True)
 subprocess.run(['node', '-e', mini, D+'_admin.html', R+'quan-tri/index.html'], check=True, cwd=D)
 subprocess.run(['cp', D+'apps-script/Kho_full.gs', R+'apps-script/Kho.gs'], check=True)
+# 2b. app CŨ (Firebase) v49: p49 + Điểm danh sang tab Ca. Ghi ra NGOÀI kho công khai (thư mục app-cu-v49 cạnh repo)
+OUT=os.path.dirname(R.rstrip('/'))+'/app-cu-v49/'; os.makedirs(OUT,exist_ok=True)
+subprocess.run(['python3', D+'p49.py', D+'app_goc_v48.html', D+'_cu1.html'], check=True)
+subprocess.run(['python3', D+'pcu.py', D+'_cu1.html', OUT+'index.html'], check=True)
 print('Xong: index.html, 404.html, quan-tri/index.html, apps-script/Kho.gs')
