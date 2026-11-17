@@ -13,7 +13,7 @@
 const BRANCH_ID = "__BID__";
 const BRANCH_NAME = "__BNAME__";
 const GOOGLE_CLIENT_ID = "__CLIENT__";
-const KHO_VERSION = 1;
+const KHO_VERSION = 2;
 const SESSION_DAYS = 30;
 const KEEP_JSON = 14;
 
@@ -88,6 +88,7 @@ function doPost(e){
     const q = JSON.parse((e.postData&&e.postData.contents)||"{}"), now = Date.now();
     if(q.op==="ping") return doGet();
     if(q.op==="login"){ const sess = login_(q.idToken); return out_({ok:true, sess:sess, who:who_(sess)}); }
+    if(q.op==="ver"){ session_(q.sess); return out_({ok:true, ver:ver_()}); }      // hỏi "có gì mới": chỉ kiểm tra phiên, không đọc Sheet
     const who = who_(q.sess);
     if(q.op==="who") return out_({ok:true, who:who, ver:ver_(), v:KHO_VERSION, sheet: who.cnLike ? "https://docs.google.com/spreadsheets/d/"+props_().getProperty("SHEET_ID") : ""});
     if(q.op==="ver") return out_({ok:true, ver:ver_()});

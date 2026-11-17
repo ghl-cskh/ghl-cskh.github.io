@@ -9,7 +9,10 @@
 const CFG = new Proxy({}, {get:(_,k)=>(window.SHEETDB||{})[k]});
 const KHO_GS = __KHO_GS__;
 const APP_V = "2.0";
-const POLL_MS = 1500;
+const POLL_MS = 1500;                       // đang dùng
+const POLL_IDLE = [[60e3,1500],[300e3,5000],[Infinity,15000]];   // không thao tác 1 phút → 5 giây, 5 phút → 15 giây
+let lastAct = Date.now(); ["pointerdown","keydown","touchstart","scroll"].forEach(t=>window.addEventListener(t, ()=>{ lastAct = Date.now(); }, {passive:true}));
+const pollMs = () => { const i = Date.now()-lastAct; return (POLL_IDLE.find(x=>i<x[0])||POLL_IDLE[2])[1]; };
 const INC = "__inc__", DEL = "__del__";
 const LS = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
 const clone = o => o==null ? o : JSON.parse(JSON.stringify(o));
@@ -150,23 +153,27 @@ const isLoaded = c => c==="branches" || K.loaded[c];
 const cacheKey = () => (A.who?A.who.uid:"x")+"|"+(B.info?B.info.id:"");
 async function restore(){ const o = await IDB.get(cacheKey()); if(o){ for(const c in o.C){ K.C[c] = new Map(o.C[c]); K.loaded[c] = true; } K.since = o.since||{}; }
   try{ K.q = JSON.parse(LS.get("sdbq2_"+cacheKey())||"[]"); }catch(e){ K.q = []; } }
-function save(){ clearTimeout(K._sv); K._sv = setTimeout(()=>{ const o = {since:K.since, C:{}};
-  for(const c in K.C){ if(K.loaded[c] && !/\/photos$/.test(c)) o.C[c] = [...K.C[c]]; } IDB.set(cacheKey(), o); }, 1200); }
+function saveNow(){ clearTimeout(K._sv); K._sv = 0; K._dirty = false; const o = {since:K.since, C:{}};
+  for(const c in K.C){ if(K.loaded[c] && !/\/photos$/.test(c)) o.C[c] = [...K.C[c]]; } IDB.set(cacheKey(), o); }
+function save(){ K._dirty = true; if(K._sv) return;      // gom nhiều thay đổi, tối đa 1 lần / 6 giây, làm lúc máy rảnh để không đơ
+  K._sv = setTimeout(()=>{ K._sv = 0; if(window.requestIdleCallback) requestIdleCallback(()=>{ if(K._dirty) saveNow(); }, {timeout:4000}); else if(K._dirty) saveNow(); }, 6000); }
+window.addEventListener("pagehide", ()=>{ if(K._dirty && A.who) saveNow(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden" && K._dirty && A.who) saveNow(); });
 const saveQ = () => { if(!LS.set("sdbq2_"+cacheKey(), JSON.stringify(K.q))) console.warn("hàng chờ quá lớn"); };
 const call = q => post(K.url, Object.assign({}, q, {sess:A.sess}));
-function emit(c){ subs.forEach(s=>{ if(s.c===c && (isLoaded(c)||K.denied[c])){ try{ s.fire(); }catch(e){ console.warn("sdb", e); report("render "+c+": "+(e&&e.message)); } } }); }
+function emit(c){ window.__sdbRev = (window.__sdbRev||0)+1; subs.forEach(s=>{ if(s.c===c && (isLoaded(c)||K.denied[c])){ try{ s.fire(); }catch(e){ console.warn("sdb", e); report("render "+c+": "+(e&&e.message)); } } }); }
 function kick(c){ K.kq.add(c); clearTimeout(K._kt); K._kt = setTimeout(()=>{ const l = [...K.kq]; K.kq.clear(); sync(l).catch(()=>{}); }, 50); }
 const watched = () => [...new Set([...subs].map(s=>s.c))];
-async function sync(only){ const list = (only||watched()).filter(Boolean); if(!list.length) return;
+async function sync(only){ const list = (only||watched()).filter(Boolean); if(!list.length) return; let anyCh = false;
   try{ const j = await call({op:"sync", colls:list.map(c=>({c, since:K.loaded[c]?(K.since[c]||0):0}))});
     for(const c in j.colls){ const rows = j.colls[c];
       if(rows && rows.denied){ K.denied[c] = true; K.loaded[c] = true; coll(c).clear(); emit(c); continue; }
       const m = coll(c), full = !K.loaded[c]; let ch = full;
       if(full){ const keep = new Map(); m.forEach((v,k)=>{ if(K.pend[c+"/"+k]) keep.set(k,v); }); m.clear(); keep.forEach((v,k)=>m.set(k,v)); }
       rows.forEach(([id,d])=>{ if(K.pend[c+"/"+id]) return; if(d===null){ if(m.delete(id)) ch = true; } else { m.set(id,d); ch = true; } });
-      K.since[c] = j.now-8000; K.loaded[c] = true; if(ch) emit(c); }
+      K.since[c] = j.now-8000; K.loaded[c] = true; if(ch){ emit(c); anyCh = true; } }
     if(j.ver) K.ver = Math.max(K.ver, j.ver);
-    K.err = ""; K.net = true; save();
+    K.err = ""; K.net = true; if(anyCh) save();
   }catch(e){ K.err = e.message||String(e); K.net = !!e.srv; if(e.auth) authLost(); }
   status(); }
 function applyLocal(ops){ const touched = new Set();
@@ -180,12 +187,13 @@ function write(ops){
   return Promise.resolve(); }
 const done = job => job.ops.forEach(o=>{ if(K.pend[o.path]>1) K.pend[o.path]--; else delete K.pend[o.path]; });
 async function flush(){ if(K.busy || !K.q.length || !K.url) return; K.busy = true;
-  while(K.q.length){ const job = K.q[0];
-    try{ const j = await call({op:"write", ops:job.ops}); K.q.shift(); saveQ(); done(job); K.net = true; K.err = "";
+  while(K.q.length){ const n = K.solo ? 1 : Math.min(K.q.length, 8), jobs = K.q.slice(0, n), ops = jobs.flatMap(j=>j.ops);
+    try{ const j = await call({op:"write", ops}); K.q.splice(0, n); saveQ(); jobs.forEach(done); K.net = true; K.err = ""; K.solo = false;
       const tc = new Set(); (j.docs||[]).forEach(d=>{ const c = parentOf(d.path); if(K.loaded[c] && !K.pend[d.path]){ const m = coll(c), id = idOf(d.path), old = JSON.stringify(m.get(id));
         if(d.op==="del") m.delete(id); else m.set(id, d.data); if(JSON.stringify(m.get(id))!==old) tc.add(c); } }); tc.forEach(emit); if(tc.size) save();
       if(j.now) K.ver = Math.max(K.ver, j.now); }
-    catch(e){ if(e.srv){ K.q.shift(); saveQ(); done(job); if(e.auth) authLost();
+    catch(e){ if(e.srv){ if(n>1){ K.solo = true; status(); continue; }      // lỗi trong lượt gộp: gửi lẻ từng lượt để chỉ lượt lỗi bị bỏ
+        const job = jobs[0]; K.q.shift(); saveQ(); done(job); K.solo = false; if(e.auth) authLost();
         const cs = [...new Set(job.ops.map(o=>parentOf(o.path)))]; cs.forEach(c=>{ K.loaded[c] = false; }); sync(cs); say("Chưa lưu được: "+e.message); }
       else { K.net = false; K.err = "Đang chờ mạng"; clearTimeout(K._rt); K._rt = setTimeout(flush, 8000); break; } }
     status(); }
@@ -206,21 +214,32 @@ function status(){ const el = document.getElementById("drvChip"); if(!el || !A.w
 /* ---------- khởi động ---------- */
 let timer = null;
 async function start(){
-  let w = null;
-  try{ const j = await call({op:"who"}); w = j.who; K.sheet = j.sheet||""; K.khoV = j.v||0; SS.set("sdb2_who_"+B.info.id, JSON.stringify(w)); }
-  catch(e){ if(e.auth){ A.sess = ""; SS.del(sessKey()); setUser(null); return; } try{ w = JSON.parse(SS.get("sdb2_who_"+B.info.id)||"null"); }catch(_){ w = null; } if(!w){ setUser(null); return; } }
+  const wk = "sdb2_who_"+B.info.id+"_"+String(A.sess||"").slice(-12); let cached = null; try{ cached = JSON.parse(LS.get(wk)||"null"); }catch(_){ cached = null; }
+  let res = null, rerr = null; const whoP = call({op:"who"}).then(r=>{ res = r; }, e=>{ rerr = e; });
+  if(cached && cached.uid){          // đã từng đăng nhập trên máy này: mở ngay bằng dữ liệu đã lưu, kho kiểm tra song song
+    A.who = cached; await restore();
+    if(K.loaded.staff){ setUser(cached); status(); startPolling();
+      await whoP;
+      if(res){ K.sheet = res.sheet||""; K.khoV = res.v||0; const w = res.who; SS.set(wk, JSON.stringify(w)); LS.set(wk, JSON.stringify(w));
+        if(JSON.stringify(w)!==JSON.stringify(cached)) location.reload(); }                 // quyền thay đổi: tải lại cho đúng
+      else if(rerr && rerr.auth){ A.sess = ""; SS.del(sessKey()); LS.del && LS.del(wk); location.reload(); }
+      sync(["staff","config"]).catch(()=>{}); if(K.q.length) flush(); return; } }
+  await whoP; let w = null;
+  if(res){ w = res.who; K.sheet = res.sheet||""; K.khoV = res.v||0; SS.set(wk, JSON.stringify(w)); LS.set(wk, JSON.stringify(w)); }
+  else { if(rerr && rerr.auth){ A.sess = ""; SS.del(sessKey()); setUser(null); return; } try{ w = JSON.parse(SS.get(wk)||"null"); }catch(_){ w = null; } if(!w){ setUser(null); return; } }
   A.who = w; await restore();
   const first = sync(["staff","config"]); if(!K.loaded.staff) await first;
   if(K.q.length) flush();
   setUser(w);
-  clearInterval(timer); timer = setInterval(poll, POLL_MS);
+  startPolling();
   status(); }
+function startPolling(){ clearTimeout(timer); const tick = () => { timer = setTimeout(async()=>{ await poll(); tick(); }, K.q.length ? POLL_MS : pollMs()); }; tick(); }
 async function boot(){
   const ok = await loadBranch();
   if(!B.info){ if(ok || !B.slug) noBranchGate(); else gate('<b>Chưa tải được danh sách chi nhánh</b><p style="margin:0">Kiểm tra mạng rồi tải lại trang.</p>'); return; }
   if(!B.info.kho){ noKhoGate(); return; }
   K.url = B.info.kho; A.sess = SS.get(sessKey())||"";
-  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") poll(); });
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ lastAct = Date.now(); poll(); } });
   window.addEventListener("online", ()=>{ flush(); poll(); });
   if(!A.sess){ setUser(null); return; }
   await start(); }

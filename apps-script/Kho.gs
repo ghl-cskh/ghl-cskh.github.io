@@ -13,7 +13,7 @@
 const BRANCH_ID = "__BID__";
 const BRANCH_NAME = "__BNAME__";
 const GOOGLE_CLIENT_ID = "__CLIENT__";
-const KHO_VERSION = 1;
+const KHO_VERSION = 2;
 const SESSION_DAYS = 30;
 const KEEP_JSON = 14;
 
@@ -88,6 +88,7 @@ function doPost(e){
     const q = JSON.parse((e.postData&&e.postData.contents)||"{}"), now = Date.now();
     if(q.op==="ping") return doGet();
     if(q.op==="login"){ const sess = login_(q.idToken); return out_({ok:true, sess:sess, who:who_(sess)}); }
+    if(q.op==="ver"){ session_(q.sess); return out_({ok:true, ver:ver_()}); }      // hỏi "có gì mới": chỉ kiểm tra phiên, không đọc Sheet
     const who = who_(q.sess);
     if(q.op==="who") return out_({ok:true, who:who, ver:ver_(), v:KHO_VERSION, sheet: who.cnLike ? "https://docs.google.com/spreadsheets/d/"+props_().getProperty("SHEET_ID") : ""});
     if(q.op==="ver") return out_({ok:true, ver:ver_()});
@@ -282,7 +283,7 @@ function meta_(sh){ const n = sh.getLastRow()-1; if(n<=0) return [];
 function parse_(cells){ const s = cells.map(x=>String(x).replace(/^~/,"")).join(""); return s ? JSON.parse(s) : {}; }
 function jsonOf_(sh, rows){ if(!rows.length) return [];
   const w = Math.max(4, sh.getLastColumn());
-  if(rows.length > 40){ const all = sh.getRange(2,4,sh.getLastRow()-1,w-3).getValues(); return rows.map(r=>parse_(all[r.row-2])); }
+  if(rows.length > 15){ const all = sh.getRange(2,4,sh.getLastRow()-1,w-3).getValues(); return rows.map(r=>parse_(all[r.row-2])); }
   return rows.map(r=>parse_(sh.getRange(r.row,4,1,w-3).getValues()[0])); }
 function toRow_(path, at, del, json){ const r = [path, at, del?1:""]; if(del) return r;
   for(let i=0;i<json.length;i+=CHUNK) r.push("~"+json.slice(i,i+CHUNK)); if(r.length<4) r.push("~{}"); return r; }
@@ -329,9 +330,11 @@ function applyOps_(sh, ops, now, allow){
 /* tải các bộ sưu tập; since>0 thì chỉ lấy phần thay đổi */
 function sync_(sh, colls, canRead){
   const M = meta_(sh), res = {}, want = [], seen = {};
+  /* nhiều bộ sưu tập cùng hỏi "phần mới": lọc 1 lần các dòng mới, khỏi duyệt toàn bộ sổ cho từng bộ */
+  const pos = colls.map(q=>Number(q.since)||0).filter(x=>x>0), minPos = pos.length ? Math.min.apply(null, pos) : 0, recent = minPos ? M.filter(r=>r.at>minPos) : M;
   colls.forEach(q=>{ const c = String(q.c), since = Number(q.since)||0, n = c.split("/").length+1, pre = c+"/";
     if(canRead && !canRead(c)){ res[c] = {denied:true}; return; }
-    const rows = M.filter(r=>r.path.indexOf(pre)===0 && r.path.split("/").length===n && r.at>since && (since>0 || !r.del));
+    const rows = (since>0 ? recent : M).filter(r=>r.path.indexOf(pre)===0 && r.path.split("/").length===n && r.at>since && (since>0 || !r.del));
     res[c] = rows; rows.forEach(r=>{ if(!r.del && !seen[r.path]){ seen[r.path]=1; want.push(r); } }); });
   const js = {}; jsonOf_(sh, want).forEach((d,i)=>{ js[want[i].path] = d; });
   const out = {};
