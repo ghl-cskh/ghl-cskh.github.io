@@ -17,6 +17,8 @@ subprocess.run(['python3', D+'p2.py', D+'app_goc_v48.html', D+'_app.html'], chec
 subprocess.run(['python3', D+'p3.py', D+'_app.html'], check=True)   # v2.2: giao diện dễ dùng
 subprocess.run(['python3', D+'p49.py', D+'_app.html', D+'_app.html'], check=True)   # v49: xuất file/hình, xếp ca 1–13 (dùng chung với app cũ)
 subprocess.run(['python3', D+'p50.py', D+'_app.html', D+'_app.html'], check=True)   # v50: Báo cáo có tình trạng sức khoẻ, chat bớt giật, bấm @tên mở hồ sơ
+subprocess.run(['python3', D+'p51.py', D+'_app.html', D+'_app.html'], check=True)   # v51: báo lỗi khi lưu thất bại, chat hết giật
+subprocess.run(['python3', D+'p52.py', D+'_app.html', D+'_app.html'], check=True)   # v52: bớt tác vụ nền gây đơ
 # 3. app quản trị
 open(D+'_admin.html', 'w').write(open(D+'admin.html').read().replace('KHO_GS=__KHO_GS__', 'KHO_GS='+js(kho)))
 # 4. nén và chép ra trang
@@ -29,5 +31,7 @@ subprocess.run(['cp', D+'apps-script/Kho_full.gs', R+'apps-script/Kho.gs'], chec
 OUT=os.path.dirname(R.rstrip('/'))+'/app-cu-v49/'; os.makedirs(OUT,exist_ok=True)
 subprocess.run(['python3', D+'p49.py', D+'app_goc_v48.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'p50.py', D+'_cu1.html', D+'_cu1.html'], check=True)
+subprocess.run(['python3', D+'p51.py', D+'_cu1.html', D+'_cu1.html'], check=True)
+subprocess.run(['python3', D+'p52.py', D+'_cu1.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'pcu.py', D+'_cu1.html', OUT+'index.html'], check=True)
 print('Xong: index.html, 404.html, quan-tri/index.html, apps-script/Kho.gs')

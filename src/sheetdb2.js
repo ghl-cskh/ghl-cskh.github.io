@@ -142,7 +142,7 @@ async function onCred(idToken){ const j = await post(B.info.kho, {op:"login", id
 
 /* ---------- kho của chi nhánh (1 kho duy nhất) ---------- */
 const subs = new Set();
-const K = {url:"", C:{}, loaded:{}, since:{}, pend:{}, q:[], busy:false, ver:0, denied:{}, err:"", net:true, kq:new Set(), sheet:"", khoV:0};
+const K = {touch:{}, url:"", C:{}, loaded:{}, since:{}, pend:{}, q:[], busy:false, ver:0, denied:{}, err:"", net:true, kq:new Set(), sheet:"", khoV:0};
 const coll = c => K.C[c] || (K.C[c] = new Map());
 /* "branches": thông tin chi nhánh từ branches.json + phần GĐ sửa trong kho (zalo…) · "config/roles": không còn GĐ Vùng */
 function view(c){ const m = coll(c);
@@ -164,36 +164,44 @@ const call = q => post(K.url, Object.assign({}, q, {sess:A.sess}));
 function emit(c){ window.__sdbRev = (window.__sdbRev||0)+1; subs.forEach(s=>{ if(s.c===c && (isLoaded(c)||K.denied[c])){ try{ s.fire(); }catch(e){ console.warn("sdb", e); report("render "+c+": "+(e&&e.message)); } } }); }
 function kick(c){ K.kq.add(c); clearTimeout(K._kt); K._kt = setTimeout(()=>{ const l = [...K.kq]; K.kq.clear(); sync(l).catch(()=>{}); }, 50); }
 const watched = () => [...new Set([...subs].map(s=>s.c))];
-async function sync(only){ const list = (only||watched()).filter(Boolean); if(!list.length) return; let anyCh = false;
+async function sync(only){ const list = (only||watched()).filter(Boolean); if(!list.length) return; let anyCh = false, stale = false; const t0 = Date.now();
+  const fresh = (c,id) => !!K.pend[c+"/"+id] || (K.touch[c+"/"+id]||0) >= t0;
   try{ const j = await call({op:"sync", colls:list.map(c=>({c, since:K.loaded[c]?(K.since[c]||0):0}))});
     for(const c in j.colls){ const rows = j.colls[c];
       if(rows && rows.denied){ K.denied[c] = true; K.loaded[c] = true; coll(c).clear(); emit(c); continue; }
       const m = coll(c), full = !K.loaded[c]; let ch = full;
-      if(full){ const keep = new Map(); m.forEach((v,k)=>{ if(K.pend[c+"/"+k]) keep.set(k,v); }); m.clear(); keep.forEach((v,k)=>m.set(k,v)); }
-      rows.forEach(([id,d])=>{ if(K.pend[c+"/"+id]) return; if(d===null){ if(m.delete(id)) ch = true; } else { m.set(id,d); ch = true; } });
+      if(full){ const keep = new Map(); m.forEach((v,k)=>{ if(fresh(c,k)) keep.set(k,v); }); m.clear(); keep.forEach((v,k)=>m.set(k,v)); }
+      rows.forEach(([id,d])=>{ if(fresh(c,id)){ stale = true; return; } if(d===null){ if(m.delete(id)) ch = true; } else { m.set(id,d); ch = true; } });
       K.since[c] = j.now-8000; K.loaded[c] = true; if(ch){ emit(c); anyCh = true; } }
     if(j.ver) K.ver = Math.max(K.ver, j.ver);
     K.err = ""; K.net = true; if(anyCh) save();
+    if(stale) K.ver = 0;                 // có hàng bị bỏ vì cũ hơn thao tác của mình: lần hỏi kế tiếp tải lại cho khớp kho
   }catch(e){ K.err = e.message||String(e); K.net = !!e.srv; if(e.auth) authLost(); }
   status(); }
+/* nhớ lúc máy này sửa/lưu từng tài liệu: lượt tải gửi đi TRƯỚC lúc đó mà trả về SAU thì mang bản cũ, không được ghi đè */
+function touchGC(){ const n = Object.keys(K.touch); if(n.length<400) return; const lim = Date.now()-120000; n.forEach(p=>{ if(K.touch[p]<lim && !K.pend[p]) delete K.touch[p]; }); }
 function applyLocal(ops){ const touched = new Set();
   ops.forEach(o=>{ const c = parentOf(o.path), id = idOf(o.path), m = coll(c), cur = m.get(id);
     if(o.op==="del") m.delete(id); else if(o.op==="update") m.set(id, merge(cur, o.data, false)); else m.set(id, o.merge ? merge(cur, o.data, true) : merge({}, o.data, true));
-    K.pend[o.path] = (K.pend[o.path]||0)+1; touched.add(c); });
+    K.pend[o.path] = (K.pend[o.path]||0)+1; K.touch[o.path] = Date.now(); touched.add(c); });
+  touchGC();
   touched.forEach(c=>emit(c)); save(); }
 function write(ops){
   ops = ops.map(o=>Object.assign({}, o, {data:o.data ? clean(o.data) : undefined}));
-  applyLocal(ops); K.q.push({id:autoId(), ops}); saveQ(); flush(); status();
-  return Promise.resolve(); }
+  const job = {id:autoId(), ops}; const ack = new Promise((res,rej)=>{ job._res = res; job._rej = rej; }); ack.catch(()=>{});
+  applyLocal(ops); K.q.push(job); saveQ(); flush(); status();
+  const p = Promise.resolve(); p.ack = ack;      // p xong ngay (không bắt người dùng chờ); p.ack xong khi kho xác nhận, hoặc báo lỗi nếu kho từ chối
+  return p; }
 const done = job => job.ops.forEach(o=>{ if(K.pend[o.path]>1) K.pend[o.path]--; else delete K.pend[o.path]; });
 async function flush(){ if(K.busy || !K.q.length || !K.url) return; K.busy = true;
   while(K.q.length){ const n = K.solo ? 1 : Math.min(K.q.length, 8), jobs = K.q.slice(0, n), ops = jobs.flatMap(j=>j.ops);
-    try{ const j = await call({op:"write", ops}); K.q.splice(0, n); saveQ(); jobs.forEach(done); K.net = true; K.err = ""; K.solo = false;
+    try{ const j = await call({op:"write", ops}); K.q.splice(0, n); saveQ(); jobs.forEach(done); jobs.forEach(x=>{ if(x._res) x._res(); }); K.net = true; K.err = ""; K.solo = false;
       const tc = new Set(); (j.docs||[]).forEach(d=>{ const c = parentOf(d.path); if(K.loaded[c] && !K.pend[d.path]){ const m = coll(c), id = idOf(d.path), old = JSON.stringify(m.get(id));
         if(d.op==="del") m.delete(id); else m.set(id, d.data); if(JSON.stringify(m.get(id))!==old) tc.add(c); } }); tc.forEach(emit); if(tc.size) save();
+      ops.forEach(o=>{ K.touch[o.path] = Date.now(); });
       if(j.now) K.ver = Math.max(K.ver, j.now); }
     catch(e){ if(e.srv){ if(n>1){ K.solo = true; status(); continue; }      // lỗi trong lượt gộp: gửi lẻ từng lượt để chỉ lượt lỗi bị bỏ
-        const job = jobs[0]; K.q.shift(); saveQ(); done(job); K.solo = false; if(e.auth) authLost();
+        const job = jobs[0]; K.q.shift(); saveQ(); done(job); K.solo = false; if(job._rej) job._rej(new Error(e.message)); if(e.auth) authLost();
         const cs = [...new Set(job.ops.map(o=>parentOf(o.path)))]; cs.forEach(c=>{ K.loaded[c] = false; }); sync(cs); say("Chưa lưu được: "+e.message); }
       else { K.net = false; K.err = "Đang chờ mạng"; clearTimeout(K._rt); K._rt = setTimeout(flush, 8000); break; } }
     status(); }
