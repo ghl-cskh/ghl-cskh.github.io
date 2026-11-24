@@ -7,10 +7,15 @@ def rep(a, b, cnt=1):
     global s
     assert s.count(a) == cnt, (a[:90], s.count(a)); s = s.replace(a, b)
 p2 = open(os.path.dirname(os.path.abspath(__file__))+'/p2.py').read()
+# v2.1: tìm ba mẹ nhanh hơn (dùng lại kết quả trong cùng một lượt vẽ; gõ tìm không vẽ lại cả danh sách mỗi phím)
+a = p2.index('# 1. all(): dùng lại'); b = p2.index('# 3. Điểm danh: từ Danh sách sang tab Ca'); exec(p2[a:b])
 a = p2.index('# 3. Điểm danh: từ Danh sách sang tab Ca'); b = p2.index("open(dst, 'w').write(s)\nprint('v2.1 ok')")
 exec(p2[a:b])
 # ô tìm tên trong tab Ca
 a = p2.index('rep(\'\'\'      <button type="button" data-cv="att"'); b = p2.index("open(dst, 'w').write(s)\nprint('v2.1 tìm trong Ca ok')")
 pre = "bmMatch" in s
 exec(p2[a:b]) if pre else None
+# giao diện máy tính rộng (wide.css) giống app mới
+_w = open(os.path.dirname(os.path.abspath(__file__))+'/wide.css').read(); _a = '\n</style>\n\n</head>'
+assert s.count(_a) == 1; s = s.replace(_a, '\n'+_w+_a)
 open(dst, 'w').write(s); print('app cũ ok', len(s), 'tìm trong Ca:', pre)
