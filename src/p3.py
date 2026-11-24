@@ -52,6 +52,11 @@ CSS='''<style id="help-ui">
 .help-lead{background:#fdeeee;padding:12px 14px;border-radius:14px;margin:0 0 4px}.help-tip{margin:16px 0 0;font-size:18px}
 </style>
 '''
+
+# GitHub Pages trả trang chi nhánh (/ma-chi-nhanh) với mã 404 dù nội dung đúng -> kiểm tra bản mới phải bỏ điều kiện r.ok
+_o='.then(r=>r.ok?r.text():"")'
+assert s.count(_o)==1, s.count(_o)
+s=s.replace(_o,'.then(r=>r.text())')
 i=s.rindex('</body>'); s=s[:i]+HELP+s[i:]
 s=s.replace('<body>','<body>\n'+CSS,1)
 open(f,'w').write(s); print('p3 ok')

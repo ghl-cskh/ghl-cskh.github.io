@@ -19,6 +19,7 @@ subprocess.run(['python3', D+'p49.py', D+'_app.html', D+'_app.html'], check=True
 subprocess.run(['python3', D+'p50.py', D+'_app.html', D+'_app.html'], check=True)   # v50: Báo cáo có tình trạng sức khoẻ, chat bớt giật, bấm @tên mở hồ sơ
 subprocess.run(['python3', D+'p51.py', D+'_app.html', D+'_app.html'], check=True)   # v51: báo lỗi khi lưu thất bại, chat hết giật
 subprocess.run(['python3', D+'p52.py', D+'_app.html', D+'_app.html'], check=True)   # v52: bớt tác vụ nền gây đơ
+subprocess.run(['python3', D+'p53.py', D+'_app.html', D+'_app.html'], check=True)   # v53: khung ảnh ba mẹ ổn định trên iPhone
 # 3. app quản trị
 open(D+'_admin.html', 'w').write(open(D+'admin.html').read().replace('KHO_GS=__KHO_GS__', 'KHO_GS='+js(kho)))
 # 4. nén và chép ra trang
@@ -33,5 +34,6 @@ subprocess.run(['python3', D+'p49.py', D+'app_goc_v48.html', D+'_cu1.html'], che
 subprocess.run(['python3', D+'p50.py', D+'_cu1.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'p51.py', D+'_cu1.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'p52.py', D+'_cu1.html', D+'_cu1.html'], check=True)
+subprocess.run(['python3', D+'p53.py', D+'_cu1.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'pcu.py', D+'_cu1.html', OUT+'index.html'], check=True)
 print('Xong: index.html, 404.html, quan-tri/index.html, apps-script/Kho.gs')
