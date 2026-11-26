@@ -38,4 +38,5 @@ subprocess.run(['python3', D+'p52.py', D+'_cu1.html', D+'_cu1.html'], check=True
 subprocess.run(['python3', D+'p53.py', D+'_cu1.html', D+'_cu1.html'], check=True)
 subprocess.run(['python3', D+'pcu.py', D+'_cu1.html', OUT+'index.html'], check=True)
 subprocess.run(['python3', D+'p3.py', OUT+'index.html'], check=True)   # Hướng dẫn trong chữ chức vụ, giống app mới
+subprocess.run(['python3', D+'p54.py', OUT+'index.html', OUT+'index.html'], check=True)   # v54: Sổ ghi chú nhanh
 print('Xong: index.html, 404.html, quan-tri/index.html, apps-script/Kho.gs')

@@ -749,7 +749,7 @@ function openSheet(sid,pid,name){ clearTimeout(hideT);
   if(wasTyping){ const s=getSelection(); if(s.rangeCount&&inEd(s.anchorNode)) lastRange=s.getRangeAt(0).cloneRange(); }
   closeSug(); cur={sid,pid,name}; ed.blur(); flush();
   setEditing(null); $("snPlanTxt").value=drafts[pid]||""; fillReport();
-  rev=window.__sdbRev; drawSheet(); $("snBody").scrollTop=0;
+  rev=dataRev(); drawSheet(); $("snBody").scrollTop=0;
   sheetEl.style.transform=""; sheetEl.hidden=false; veil.hidden=false; void sheetEl.offsetWidth; sheetEl.classList.add("in"); veil.classList.add("in");
   sheetEl.focus({preventScroll:true}); }
 function closeSheet(){ if(sheetEl.hidden||!cur) return;
@@ -787,8 +787,10 @@ sheetEl.addEventListener("touchmove",e=>{ if(!drag) return; const t=e.touches[0]
 const dragEnd=()=>{ if(!drag) return; const d=drag; drag=null; sheetEl.style.transition=""; if(d.on&&d.d>90) closeSheet(); else sheetEl.style.transform=""; };
 sheetEl.addEventListener("touchend",dragEnd); sheetEl.addEventListener("touchcancel",dragEnd);
 let boxRev=null;
-setInterval(()=>{ if(root.hidden||document.hidden) return; if(window.__sdbRev!==boxRev){ boxRev=window.__sdbRev; fillTemps(); }
-  if(cur&&window.__sdbRev!==rev){ rev=window.__sdbRev; drawSheet(); } },800);
+/* dấu hiệu "dữ liệu vừa đổi": app mới có sẵn __sdbRev, app cũ (Firebase) thì tự tính từ dữ liệu đã tải */
+const dataRev=()=>window.__sdbRev!=null?window.__sdbRev:Object.values(S.data).map(D=>["parents","plans","logs","att","notes"].map(k=>(D[k]||[]).reduce((a,x)=>a+1+(Number(x.updatedAt)||0)%1e7+(x.done?1:0),0)).join()).join("|")+Object.values(S.loaded||{}).map(x=>x.size).join();
+setInterval(()=>{ if(root.hidden||document.hidden) return; const now=dataRev(); if(now!==boxRev){ boxRev=now; fillTemps(); }
+  if(cur&&now!==rev){ rev=now; drawSheet(); } },800);
 
 /* ---------- bàn phím ảo: khung ghi chú luôn vừa đúng phần màn hình còn nhìn thấy ---------- */
 const vv=window.visualViewport;

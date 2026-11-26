@@ -18,5 +18,6 @@ rep('const busyTyping=()=> !!S.editing', 'const busyTyping=()=> !!window.__snOpe
 # 4. chặn "chạm đúp phóng to" không được nuốt thao tác trong khung ghi chú
 rep('!e.target.closest("input,textarea,select")) e.preventDefault(); lastT=n;', '!e.target.closest("input,textarea,select,#snRoot")) e.preventDefault(); lastT=n;')
 # 5. tăng số phiên bản để máy đang mở app tự tải bản mới
-rep('<meta name="app-v" content="51">', '<meta name="app-v" content="54">')
+old_v = '48' if '<meta name="app-v" content="48">' in s else '51'      # app cũ (Firebase) còn số 48 sau chuỗi vá
+rep('<meta name="app-v" content="%s">' % old_v, '<meta name="app-v" content="54">')
 open(dst, 'w').write(s); print('p54 ok')
