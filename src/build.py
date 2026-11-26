@@ -20,6 +20,7 @@ subprocess.run(['python3', D+'p50.py', D+'_app.html', D+'_app.html'], check=True
 subprocess.run(['python3', D+'p51.py', D+'_app.html', D+'_app.html'], check=True)   # v51: báo lỗi khi lưu thất bại, chat hết giật
 subprocess.run(['python3', D+'p52.py', D+'_app.html', D+'_app.html'], check=True)   # v52: bớt tác vụ nền gây đơ
 subprocess.run(['python3', D+'p53.py', D+'_app.html', D+'_app.html'], check=True)   # v53: khung ảnh ba mẹ ổn định trên iPhone
+subprocess.run(['python3', D+'p54.py', D+'_app.html', D+'_app.html'], check=True)   # v54: Sổ ghi chú nhanh (điện thoại & iPad)
 # 3. app quản trị
 open(D+'_admin.html', 'w').write(open(D+'admin.html').read().replace('KHO_GS=__KHO_GS__', 'KHO_GS='+js(kho)))
 # 4. nén và chép ra trang
