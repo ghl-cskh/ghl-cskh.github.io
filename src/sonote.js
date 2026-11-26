@@ -507,7 +507,7 @@ const pen=snPen({root, paper:$("snPaper"), scroller, before:sug, say, today, lin
   tapAt:(x,y)=>{ const kind=hitAt(x,y); if(!kind) return false; const el=hitEl(x,y);
     if(kind==="temp") el.querySelector("input,textarea").focus({preventScroll:true});
     else if(kind==="tick") tickPlan(el);
-    else setTimeout(()=>{ const t=el.parentElement; kind==="name"||kind==="old"?openSheet(t.dataset.sid,t.dataset.pid,t.dataset.name):openAsk(el); },30);   // sau khi click đi qua, kẻo đóng bảng ngay
+    else setTimeout(()=>{ const t=el.parentElement; kind==="name"?openProfile(t.dataset.sid,t.dataset.pid,t.dataset.name):kind==="old"?openSheet(t.dataset.sid,t.dataset.pid,t.dataset.name):openAsk(el); },30);   // sau khi click đi qua, kẻo đóng bảng ngay
     return true; },
   onMode:m=>{ closeSug(); closeAsk(); if(m!=="type") ed.blur(); setEditable(); markEmpty(); }});
 /* dưới đầu bút / ngón tay là gì: ô số, thẻ tên, chỗ cần hỏi lại */
@@ -580,7 +580,7 @@ document.addEventListener("selectionchange",()=>{ if(root.hidden||!sheetEl.hidde
 ed.addEventListener("mousedown",e=>{ if(e.target.closest(".sn-name,.sn-khk,.sn-tg,.sn-kh.old")) e.preventDefault(); });
 ed.addEventListener("click",e=>{ const u=e.target.closest(".sn-unsure"); if(u&&curDate===today()){ openAsk(u); return; }
   const k=e.target.closest(".sn-khk,.sn-tg"); if(k){ e.preventDefault(); tickPlan(k); return; }
-  const n=e.target.closest(".sn-name,.sn-kh.old"), t=n&&n.parentElement; if(t){ e.preventDefault(); openSheet(t.dataset.sid,t.dataset.pid,t.dataset.name); } });
+  const n=e.target.closest(".sn-name,.sn-kh.old"), t=n&&n.parentElement; if(t){ e.preventDefault(); (n.classList.contains("sn-name")?openProfile:openSheet)(t.dataset.sid,t.dataset.pid,t.dataset.name); } });
 /* chạm vào khoảng trống bên dưới: đặt con trỏ ở cuối */
 scroller.addEventListener("click",e=>{ if(!pen.on()&&(e.target===scroller||e.target.classList.contains("sn-page")||e.target===$("snPaper")))if(ed.contentEditable==="true"){ ed.focus({preventScroll:true}); caretEnd(); } });
 $("snBar").addEventListener("mousedown",e=>e.preventDefault());
@@ -744,6 +744,15 @@ async function saveSheet(auto){
 $("snTnSave").onclick=()=>saveSheet(false);
 function setEditing(x){ editing=x?x.id:null; $("snPlanTxt").value=x?x.noiDung:""; $("snPlanCancel").hidden=!x; $("snPlanSave").textContent=x?"Lưu thay đổi":"Thêm vào kế hoạch"; }
 const drafts={};
+/* bấm tên: mở thẳng hồ sơ ba mẹ trong app; bấm quay lại ở hồ sơ thì về đúng chỗ đang ghi */
+let backTo=null;
+function openProfile(sid,pid,name){ const f=findParent(sid,pid); if(!f) return openSheet(sid,pid,name);   // hồ sơ đã xoá: báo trong bảng
+  closeSug(); closeAsk(); ed.blur(); flush();
+  backTo={top:scroller.scrollTop}; root.hidden=true; document.documentElement.classList.remove("sn-lock");
+  openDetail(f.sid,pid,curDate); }
+new MutationObserver(()=>{ if(!backTo||!$("detail").hidden) return; const b=backTo; backTo=null;
+  root.hidden=false; document.body.style.overflow="hidden"; document.documentElement.classList.add("sn-lock"); fit(); scroller.scrollTop=b.top; fillTemps();
+}).observe($("detail"),{attributes:true,attributeFilter:["hidden"]});
 function openSheet(sid,pid,name){ clearTimeout(hideT);
   wasTyping=document.activeElement===ed; keepScroll=scroller.scrollTop;
   if(wasTyping){ const s=getSelection(); if(s.rangeCount&&inEd(s.anchorNode)) lastRange=s.getRangeAt(0).cloneRange(); }
@@ -795,9 +804,12 @@ setInterval(()=>{ if(root.hidden||document.hidden) return; const now=dataRev(); 
 /* ---------- bàn phím ảo: khung ghi chú luôn vừa đúng phần màn hình còn nhìn thấy ---------- */
 const vv=window.visualViewport;
 function fit(){ if(root.hidden) return;
-  if(vv){ root.style.top=vv.offsetTop+"px"; root.style.height=vv.height+"px"; root.classList.toggle("kb", window.innerHeight-vv.height>120); }
+  const b=window.__kbBox(vv);
+  root.style.top=b?b.t+"px":"0px"; root.style.height=b?b.h+"px":"auto"; root.style.bottom=b?"auto":"0px"; root.classList.toggle("kb",!!b);
   keepCaretVisible(); }
 if(vv){ vv.addEventListener("resize",fit); vv.addEventListener("scroll",fit); }
+["focusin","focusout"].forEach(e=>root.addEventListener(e,()=>setTimeout(fit,80)));
+new MutationObserver(()=>window.__lockPage("note",!root.hidden)).observe(root,{attributes:true,attributeFilter:["hidden"]});
 
 /* ---------- mở / đóng ---------- */
 let prevOverflow="";

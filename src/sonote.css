@@ -2,7 +2,7 @@
 /* v54: Sổ ghi chú nhanh */
 #snOpen[hidden],#snRoot[hidden],#snRoot [hidden]{display:none!important}
 html.sn-lock .ch-fab{display:none!important}
-#snRoot{position:fixed;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:2147483100;display:flex;flex-direction:column;background:var(--surface);color:var(--ink);overflow:hidden;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+#snRoot{position:fixed;left:0;right:0;top:0;bottom:0;z-index:2147483100;display:flex;flex-direction:column;background:var(--surface);color:var(--ink);overflow:hidden;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 #snRoot button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .sn-head{display:flex;align-items:center;gap:6px;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;border-bottom:1px solid var(--line)}
 .sn-ib{flex:none;width:40px;height:40px;border:0;border-radius:12px;background:transparent;color:var(--accent);font-size:24px;line-height:1}
